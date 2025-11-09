@@ -3,3 +3,5 @@ dependencies:
   espressif/esp_tinyusb: ^2.0.1
   idf: ^5.5.1
   espressif/led_strip: ^3.0.1~1
+  espressif/ssd1306: ^1.0.5~1
+  lvgl/lvgl: ^9.4.0
