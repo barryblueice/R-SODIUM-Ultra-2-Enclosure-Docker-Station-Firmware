@@ -21,9 +21,6 @@ uint8_t oled_buffer[LCD_H_RES * LCD_V_RES / 8];
 _lock_t lvgl_api_lock;
 lv_obj_t *live_label; 
 
-extern void _startup_logo(lv_disp_t *disp);
-extern void _main_gui(lv_disp_t *disp);
-
 bool notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t io_panel, esp_lcd_panel_io_event_data_t *edata, void *user_ctx) {
     lv_display_t *disp = (lv_display_t *)user_ctx;
     lv_display_flush_ready(disp);
