@@ -77,4 +77,16 @@ void lvgl_port_task(void *arg) {
     }
 }
 
+void lvgl_update_task(void *pvParameters)
+{
+    while (1) {
+        lv_timer_handler();
 
+        sensor_text_t msg;
+        while(xQueueReceive(sensor_queue, &msg, 0) == pdTRUE) {
+            lv_label_set_text(labels[msg.index], msg.text);
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(20));
+    }
+}

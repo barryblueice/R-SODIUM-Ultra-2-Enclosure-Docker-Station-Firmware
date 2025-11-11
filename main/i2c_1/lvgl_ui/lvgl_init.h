@@ -34,5 +34,6 @@ void show_ui(void *arg);
 void increase_lvgl_tick(void *arg);
 void lvgl_port_task(void *arg);
 void update_ui(int index, const char *text);
+void lvgl_update_task(void *arg);
 
 #endif
