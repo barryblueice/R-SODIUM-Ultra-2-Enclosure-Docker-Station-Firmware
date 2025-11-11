@@ -4,16 +4,19 @@
 #include "freertos/task.h"
 #include "esp_log.h"
 #include "led_strip.h"
+#include "esp_timer.h"
 
-#define TAG "WS2812_RAINBOW"
+#include "ws2812.h"
+
 #define WS2812_PIN 3
 #define LED_NUM    8
 #define DELAY_MS   50
 
+static const char *TAG = "WS2812_THREAD";
+
 static led_strip_handle_t led_strip;
 
-static void hsv2rgb(float h, float s, float v, uint8_t *r, uint8_t *g, uint8_t *b)
-{
+static void hsv2rgb(float h, float s, float v, uint8_t *r, uint8_t *g, uint8_t *b) {
     float c = v * s;
     float x = c * (1 - fabsf(fmodf(h / 60.0f, 2) - 1));
     float m = v - c;
@@ -30,9 +33,10 @@ static void hsv2rgb(float h, float s, float v, uint8_t *r, uint8_t *g, uint8_t *
     *b = (uint8_t)((b_ + m) * 255);
 }
 
-void app_main(void)
-{
-    ESP_LOGI(TAG, "Initialize WS2812 on GPIO %d", WS2812_PIN);
+void ws2812_thread(void *arg) {
+
+    uint8_t status = 0;
+    if (arg != NULL) status = *(uint8_t*)arg;
 
     led_strip_config_t strip_config = {
         .strip_gpio_num = WS2812_PIN,
