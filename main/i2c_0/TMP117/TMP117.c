@@ -15,7 +15,7 @@
 #define TMP117_TMP_REG      0x00
 #define TMP117_RESOLUTION   0.0078125f
 
-static esp_err_t TMP117_read_temp(i2c_master_dev_handle_t dev, float *temp) {
+esp_err_t TMP117_read_temp(i2c_master_dev_handle_t dev, float *temp) {
     uint8_t reg = TMP117_TMP_REG;
     uint8_t data[2];
 
@@ -44,22 +44,3 @@ void tmp117_thread(void *arg) {
 
     }
 }
-
-// void tmp117_thread(void *arg) {
-
-//     while (1) {
-//         float temp_front = 0, temp_back = 0;
-//         TMP117_read_temp(tmp117_front, &temp_front);
-//         TMP117_read_temp(tmp117_back, &temp_back);
-
-//         char temp_show[32];
-//         snprintf(temp_show, sizeof(temp_show), "F: %.3f°C; B: %.3f°C", temp_front, temp_back);
-//         lv_label_set_text(labels[1], temp_show);
-
-//         ESP_LOGI(TAG, temp_show);
-
-//         esp_task_wdt_reset();
-//         vTaskDelay(pdMS_TO_TICKS(500));
-
-//     }
-// }

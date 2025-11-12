@@ -12,6 +12,9 @@ idf_component_register(
         # I2C 0 - TMP117 Temperature Sensors
         "i2c_0/TMP117/TMP117.c"
 
+        # I2C 0 - MP4245 Controller
+        "i2c_0/MP4245/MP4245.c"
+
         # I2C 1 - LVGL UI
         "i2c_1/lvgl_ui/lvgl_init.c"
         "i2c_1/lvgl_ui/display.c"
@@ -19,6 +22,9 @@ idf_component_register(
 
         # WS2812 LED Control
         "ws2812/ws2812.c"
+
+        # Fan Control (PWM + RPM)
+        "fan_ctl/pwm_ctl.c"
 
     INCLUDE_DIRS "."
 
