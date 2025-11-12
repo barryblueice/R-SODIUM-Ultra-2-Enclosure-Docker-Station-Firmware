@@ -3,8 +3,8 @@
 #define I2C_BUS0_SDA        17
 #define I2C_BUS0_SCL        18
 #define I2C_MASTER_FREQ_HZ  400000
-#define TMP117_ADDR_FRONT   0x49
-#define TMP117_ADDR_BACK    0x48
+#define TMP117_ADDR_FRONT   0x48
+#define TMP117_ADDR_BACK    0x49
 #define TMP117_TMP_REG      0x00
 #define TMP117_RESOLUTION   0.0078125f
 

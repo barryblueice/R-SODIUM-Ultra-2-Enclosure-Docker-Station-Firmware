@@ -36,17 +36,11 @@ void tmp117_thread(void *arg) {
         TMP117_read_temp(tmp117_front, &temp_front);
         TMP117_read_temp(tmp117_back, &temp_back);
 
-        snprintf(buf, sizeof(buf), "F: %.3f°C", temp_front);
+        snprintf(buf, sizeof(buf), "F: %.1f°C,B: %.1f°C", temp_front, temp_back);
         update_label_text(0, buf);
         ESP_LOGI(TAG, "%s", buf);
 
-        vTaskDelay(pdMS_TO_TICKS(2000));
-
-        snprintf(buf, sizeof(buf), "B: %.3f°C", temp_back);
-        update_label_text(0, buf);
-        ESP_LOGI(TAG, "%s", buf);
-
-        vTaskDelay(pdMS_TO_TICKS(2000));
+        vTaskDelay(pdMS_TO_TICKS(1000));
 
     }
 }
