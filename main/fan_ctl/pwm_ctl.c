@@ -4,12 +4,16 @@
 #include "freertos/semphr.h"
 #include "driver/mcpwm_prelude.h"
 #include "driver/gpio.h"
-#include "driver/i2c_master.h"
 #include "esp_log.h"
 
 #define TAG "FAN_CTRL"
 
-// ------------------- FAN CONFIG -------------------
+#include "init_func/init_func.h"
+
+#include "fan_ctl/pwm_ctl.h"
+
+#include "i2c_1/lvgl_ui/lvgl_init.h"
+
 #define FAN_PWM_GPIO     33
 #define FAN_RPM_GPIO     34
 #define MCPWM_CLK_HZ     1000000UL
@@ -18,35 +22,21 @@
 #define PULSES_PER_REV   2
 #define RPM_MEASURE_INTERVAL_MS 1000
 
-// ------------------- I2C TMP117 CONFIG -------------------
-#define I2C_MASTER_SDA_IO   17
-#define I2C_MASTER_SCL_IO   18
-#define I2C_MASTER_FREQ_HZ  400000
-#define TMP117_ADDR_FRONT   0x49
-#define TMP117_ADDR_BACK    0x48
-#define TMP117_TMP_REG      0x00
-#define TMP117_RESOLUTION   0.0078125f
-
-// ------------------- FAN TEMP CONTROL -------------------
-#define FAN_MIN_DUTY     10.0f    // % 最小有效占空比
+#define FAN_MIN_DUTY     18.0f    // % 最小有效占空比
 #define FAN_MAX_DUTY     100.0f  // % 最大占空比
 #define FAN_START_TEMP   40.0f   // °C 起转温度
-#define FAN_FULL_TEMP    80.0f   // °C 全速温度
+#define FAN_FULL_TEMP    70.0f   // °C 全速温度
 
-// ------------------- GLOBALS -------------------
+#include "i2c_0/TMP117/TMP117.h"
+
 static mcpwm_cmpr_handle_t comparator = NULL;
 static volatile uint32_t pulse_count = 0;
 static SemaphoreHandle_t rpm_mutex;
-static i2c_master_bus_handle_t i2c_bus = NULL;
-static i2c_master_dev_handle_t tmp117_front = NULL;
-static i2c_master_dev_handle_t tmp117_back = NULL;
 
-// ------------------- RPM ISR -------------------
 static void IRAM_ATTR rpm_isr_handler(void* arg) {
     pulse_count++;
 }
 
-// ------------------- PWM CONTROL -------------------
 static void fan_set_speed(float duty_percent) {
     if (duty_percent < 0.0f) duty_percent = 0.0f;
     if (duty_percent > 100.0f) duty_percent = 100.0f;
@@ -58,7 +48,7 @@ static void fan_set_speed(float duty_percent) {
     ESP_LOGI(TAG, "Set duty: %.1f%% (cmp=%u)", duty_percent, cmp);
 }
 
-static void fan_pwm_init(void) {
+void fan_pwm_init(void) {
     mcpwm_timer_handle_t timer = NULL;
     mcpwm_oper_handle_t oper = NULL;
     mcpwm_gen_handle_t generator = NULL;
@@ -96,8 +86,7 @@ static void fan_pwm_init(void) {
     fan_set_speed(0.0f);
 }
 
-// ------------------- RPM INIT -------------------
-static void fan_rpm_init(void) {
+void fan_rpm_init(void) {
     rpm_mutex = xSemaphoreCreateMutex();
 
     gpio_config_t io_conf = {
@@ -113,44 +102,8 @@ static void fan_rpm_init(void) {
     gpio_isr_handler_add(FAN_RPM_GPIO, rpm_isr_handler, NULL);
 }
 
-// ------------------- I2C TMP117 INIT -------------------
-static esp_err_t i2c_master_init(void) {
-    i2c_master_bus_config_t bus_cfg = {
-        .sda_io_num = I2C_MASTER_SDA_IO,
-        .scl_io_num = I2C_MASTER_SCL_IO,
-        .clk_source = I2C_CLK_SRC_DEFAULT,
-        .glitch_ignore_cnt = 7,
-        .flags.enable_internal_pullup = true,
-    };
-    ESP_ERROR_CHECK(i2c_new_master_bus(&bus_cfg, &i2c_bus));
-
-    i2c_device_config_t dev_front_cfg = {
-        .dev_addr_length = I2C_ADDR_BIT_LEN_7,
-        .device_address = TMP117_ADDR_FRONT,
-        .scl_speed_hz = I2C_MASTER_FREQ_HZ,
-    };
-    i2c_device_config_t dev_back_cfg = dev_front_cfg;
-    dev_back_cfg.device_address = TMP117_ADDR_BACK;
-
-    ESP_ERROR_CHECK(i2c_master_bus_add_device(i2c_bus, &dev_front_cfg, &tmp117_front));
-    ESP_ERROR_CHECK(i2c_master_bus_add_device(i2c_bus, &dev_back_cfg, &tmp117_back));
-
-    ESP_LOGI(TAG, "I2C and TMP117 ready.");
-    return ESP_OK;
-}
-
-static esp_err_t TMP117_read_temp(i2c_master_dev_handle_t dev, float *temp) {
-    uint8_t reg = TMP117_TMP_REG;
-    uint8_t data[2];
-    esp_err_t ret = i2c_master_transmit_receive(dev, &reg, 1, data, 2, -1);
-    if (ret != ESP_OK) return ret;
-    int16_t raw = (int16_t)((data[0] << 8) | data[1]);
-    *temp = raw * TMP117_RESOLUTION;
-    return ESP_OK;
-}
-
-// ------------------- RPM TASK -------------------
-static void rpm_task(void *arg) {
+void fan_rpm_task(void *arg) {
+    char buf[32];
     while (1) {
         vTaskDelay(pdMS_TO_TICKS(RPM_MEASURE_INTERVAL_MS));
 
@@ -161,12 +114,13 @@ static void rpm_task(void *arg) {
         xSemaphoreGive(rpm_mutex);
 
         uint32_t rpm = (count * 60000) / (PULSES_PER_REV * RPM_MEASURE_INTERVAL_MS);
-        ESP_LOGI(TAG, "Fan RPM: %u", rpm);
+        snprintf(buf, sizeof(buf), "Fan RPM: %lu", rpm);
+        update_label_text(1, buf);
+        ESP_LOGI(TAG, "%s", buf);
     }
 }
 
-// ------------------- TEMP CONTROL TASK -------------------
-static void temp_task(void *arg) {
+void fan_temp_task(void *arg) {
     while (1) {
         float t1 = 0, t2 = 0;
         TMP117_read_temp(tmp117_front, &t1);
@@ -176,30 +130,14 @@ static void temp_task(void *arg) {
         float duty = 0.0f;
 
         if (avg < FAN_START_TEMP) {
-            duty = 0.0f; // 温度低于启动阈值，停转
+            duty = 0.0f;
         } else {
-            // 温度≥启动阈值 → 从最小有效占空比线性增加
             duty = FAN_MIN_DUTY + (avg - FAN_START_TEMP) * (FAN_MAX_DUTY - FAN_MIN_DUTY) / (FAN_FULL_TEMP - FAN_START_TEMP);
             if (duty > FAN_MAX_DUTY) duty = FAN_MAX_DUTY;
         }
 
         fan_set_speed(duty);
 
-        ESP_LOGI(TAG, "T_front=%.2f°C, T_back=%.2f°C, Avg=%.2f°C -> Duty=%.1f%%",
-                 t1, t2, avg, duty);
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
-}
-
-// ------------------- MAIN -------------------
-void app_main(void) {
-
-    ESP_LOGI(TAG, "PERIOD_TICKS=%u", (unsigned)PERIOD_TICKS);
-
-    i2c_master_init();
-    fan_pwm_init();
-    fan_rpm_init();
-
-    xTaskCreate(rpm_task, "rpm_task", 4096, NULL, 5, NULL);
-    xTaskCreate(temp_task, "temp_task", 4096, NULL, 6, NULL);
 }
