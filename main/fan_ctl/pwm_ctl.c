@@ -147,9 +147,10 @@ void fan_temp_task(void *arg) {
             duty = 0.0f;
             gpio_set_level(FAN_PWR_GPIO, 0);
         } else {
+            gpio_set_level(FAN_PWR_GPIO, 1);
             duty = FAN_MIN_DUTY + (avg - FAN_START_TEMP) * (FAN_MAX_DUTY - FAN_MIN_DUTY) / (FAN_FULL_TEMP - FAN_START_TEMP);
             if (duty > FAN_MAX_DUTY) duty = FAN_MAX_DUTY;
-            gpio_set_level(FAN_PWR_GPIO, 1);
+            
         }
 
         fan_set_speed(duty);
