@@ -39,7 +39,7 @@ void tmp117_thread(void *arg) {
 
         snprintf(buf, sizeof(buf), "F: %.1f°C,B: %.1f°C", temp_front, temp_back);
         update_label_text(0, buf);
-        // update_label_text(6, buf);
+        update_label_text(6, buf);
         ESP_LOGI(TAG, "%s", buf);
 
         bool over_threshold = (temp_front > TEMP_THRESHOLD || temp_back > TEMP_THRESHOLD);

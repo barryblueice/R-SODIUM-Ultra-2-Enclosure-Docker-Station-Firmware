@@ -164,7 +164,7 @@ static void mp4245_read_all_status(void) {
     vin = pmbus_linear11_decode(raw, 99);
     mp4245_read_word(PMBUS_CMD_READ_VOUT, &raw);
     vout = pmbus_linear16_decode(raw, vout_exp);
-    snprintf(buf, sizeof(buf), "VIN=%.1fV, VOUT=%.1fV", vin, vout);
+    snprintf(buf, sizeof(buf), "VIN=%.1fV,VOUT=%.1fV", vin, vout);
     update_label_text(2, buf);
     ESP_LOGI(TAG, "%s", buf);
 
