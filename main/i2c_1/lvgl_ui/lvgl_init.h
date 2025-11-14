@@ -22,10 +22,18 @@
 #define LVGL_TASK_MAX_DELAY_MS 500
 #define LVGL_TASK_MIN_DELAY_MS 1000 / CONFIG_FREERTOS_HZ
 
+#define PAGE_COUNT 2
+#define LABELS_PER_PAGE 5
+#define TOTAL_LABELS (PAGE_COUNT * LABELS_PER_PAGE)
+#define item_n 10
+
+extern lv_obj_t *flat_labels[TOTAL_LABELS];
+extern lv_obj_t *pages[PAGE_COUNT];
+extern lv_obj_t *labels[PAGE_COUNT][LABELS_PER_PAGE];
+
 extern uint8_t oled_buffer[LCD_H_RES * LCD_V_RES / 8];
 extern _lock_t lvgl_api_lock;
 extern lv_obj_t *live_label;
-extern lv_obj_t *labels[5];
 
 bool notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t io_panel, esp_lcd_panel_io_event_data_t *edata, void *user_ctx);
 void lvgl_flush_cb(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map);

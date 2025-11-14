@@ -20,9 +20,6 @@ void app_main(void)
 {
     ESP_LOGI(TAG, "Initializing R-SODIUM Ultra Enclosure 2.0 Controller");
     ESP_ERROR_CHECK(i2c_master_init());
-    lv_init();
-    lv_display_t *display = lv_display_create(LCD_H_RES, LCD_V_RES);
-    xTaskCreate(show_ui, "LVGL_UI", 16*1024, display, 2, NULL);
 
     ESP_LOGI(TAG, "Initialize WS2812 (Process LED)");
     xTaskCreate(ws2812_thread, "WS2812_THREAD", 4*1024, 0, 2, NULL);
@@ -40,4 +37,9 @@ void app_main(void)
 
     ESP_LOGI(TAG, "Initialize MP4245");
     xTaskCreate(mp4245_thread, "MP4245_THREAD", 8*1024, 0, 2, NULL);
+    
+    lv_init();
+    lv_display_t *display = lv_display_create(LCD_H_RES, LCD_V_RES);
+    xTaskCreate(show_ui, "LVGL_UI", 16*1024, display, 2, NULL);
+
 }

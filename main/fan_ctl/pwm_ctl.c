@@ -130,6 +130,7 @@ void fan_rpm_task(void *arg) {
         uint32_t rpm = (count * 60000) / (PULSES_PER_REV * RPM_MEASURE_INTERVAL_MS);
         snprintf(buf, sizeof(buf), "Fan RPM: %lu", rpm);
         update_label_text(1, buf);
+        update_label_text(7, buf);
         ESP_LOGI(TAG, "%s", buf);
     }
 }

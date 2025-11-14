@@ -29,8 +29,8 @@ esp_err_t TMP117_read_temp(i2c_master_dev_handle_t dev, float *temp) {
 }
 
 void tmp117_thread(void *arg) {
-
     char buf[32];
+    bool over_threshold_last = false;
 
     while (1) {
         float temp_front = 0, temp_back = 0;
@@ -39,17 +39,21 @@ void tmp117_thread(void *arg) {
 
         snprintf(buf, sizeof(buf), "F: %.1f°C,B: %.1f°C", temp_front, temp_back);
         update_label_text(0, buf);
+        // update_label_text(6, buf);
         ESP_LOGI(TAG, "%s", buf);
 
-        if (temp_front > TEMP_THRESHOLD || temp_back > TEMP_THRESHOLD) {
+        bool over_threshold = (temp_front > TEMP_THRESHOLD || temp_back > TEMP_THRESHOLD);
+
+        if (over_threshold && !over_threshold_last) {
             ESP_LOGW(TAG, "Temperature threshold exceeded!");
             led_mode = LED_MODE_RED_BREATH;
-        } else {
+        } else if (!over_threshold && over_threshold_last) {
             ESP_LOGW(TAG, "Temperature normal.");
             led_mode = LED_MODE_RGB;
         }
 
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        over_threshold_last = over_threshold;
 
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
