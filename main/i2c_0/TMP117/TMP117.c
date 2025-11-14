@@ -9,6 +9,7 @@
 
 #include "i2c_1/lvgl_ui/lvgl_init.h"
 #include "init_func/init_func.h"
+#include "ws2812/ws2812.h"
 
 #define TAG "TMP117"
 
@@ -39,6 +40,14 @@ void tmp117_thread(void *arg) {
         snprintf(buf, sizeof(buf), "F: %.1f°C,B: %.1f°C", temp_front, temp_back);
         update_label_text(0, buf);
         ESP_LOGI(TAG, "%s", buf);
+
+        if (temp_front > TEMP_THRESHOLD || temp_back > TEMP_THRESHOLD) {
+            ESP_LOGW(TAG, "Temperature threshold exceeded!");
+            led_mode = LED_MODE_RED_BREATH;
+        } else {
+            ESP_LOGW(TAG, "Temperature normal.");
+            led_mode = LED_MODE_RGB;
+        }
 
         vTaskDelay(pdMS_TO_TICKS(1000));
 

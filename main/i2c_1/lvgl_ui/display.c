@@ -86,6 +86,7 @@ void show_ui(void *arg) {
     _startup_logo(display);
     _lock_release(&lvgl_api_lock);
     vTaskDelay(pdMS_TO_TICKS(1000));
+    lv_obj_clean(lv_scr_act());
     _lock_acquire(&lvgl_api_lock);
     _main_gui(display); 
     _lock_release(&lvgl_api_lock);

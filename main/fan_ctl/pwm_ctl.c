@@ -23,10 +23,10 @@
 #define PULSES_PER_REV   2
 #define RPM_MEASURE_INTERVAL_MS 1000
 
-#define FAN_MIN_DUTY     18.0f    // % 最小有效占空比
-#define FAN_MAX_DUTY     100.0f  // % 最大占空比
-#define FAN_START_TEMP   40.0f   // °C 起转温度
-#define FAN_FULL_TEMP    70.0f   // °C 全速温度
+#define FAN_MIN_DUTY     18.0f
+#define FAN_MAX_DUTY     100.0f
+#define FAN_START_TEMP   40.0f
+#define FAN_FULL_TEMP    70.0f
 
 #include "i2c_0/TMP117/TMP117.h"
 
